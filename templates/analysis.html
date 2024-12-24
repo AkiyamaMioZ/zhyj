@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>analysis</title>
+    {% include 'common/head.html' %}
+    <style>
+        .select-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .select-container label {
+            color: #9dc23d;
+            margin-right: 10px;
+        }
+
+        .select-container select {
+            padding: 5px;
+            border: 1px solid #9dc23d;
+            color: #9dc23d;
+            background-color: #2b2b2b;
+        }
+    </style>
+</head>
+<body>
+{% include 'common/navbar.html' %}
+
+<div class="container">
+    <div class="header">
+        <h1>Most Played Games</h1>
+    </div>
+
+    <div class="select-container">
+        <label for="analysisTypeSelect">分析类型:</label>
+        <select id="analysisTypeSelect">
+            <option value="tagStatistics">标签统计</option>
+            <option value="popularityStatistics">热度统计</option>
+            <option value="priceStatistics">价格统计</option>
+            <option value="positiveRateStatistics">好评率统计</option>
+            <option value="positiveRatePriceCorrelation">好评率和价格关联度分析</option>
+            <option value="reviewsPopularityCorrelation">评论数量和热度关联度分析</option>
+        </select>
+    </div>
+    <div class="select-container">
+        <label for="chartTypeSelect">图形选择:</label>
+        <select id="chartTypeSelect">
+            <option value="bar">柱状图</option>
+            <option value="wordCloud">词云图</option>
+            <option value="pie">饼图</option>
+            <option value="scatter">散点图</option>
+        </select>
+    </div>
+    <div class="select-container">
+        <label for="tagCountSelect">显示数量:</label>
+        <select id="tagCountSelect"></select>
+    </div>
+
+    <div id="tagChart" style="width: 100%; height: 600px;"></div>
+</div>
+
+{% include 'common/foot.html' %}
+
+<script>
+    $(document).ready(function () {
+        // 初始化ECharts实例
+        var myChart = echarts.init(document.getElementById('tagChart'));
+
+        // 存储原始数据
+        var originalData = [];
+
+        // 动态生成下拉框选项
+        var countOptions = [10, 20, 50, 100, 'all'];
+        var countSelect = $('#tagCountSelect');
+        countOptions.forEach(function (option) {
+            countSelect.append($('<option>', {
+                value: option,
+                text: option === 'all' ? '全部' : option
+            }));
+        });
+
+        // 默认隐藏饼图和散点图选项
+        $('#chartTypeSelect option[value="pie"], #chartTypeSelect option[value="scatter"]').hide();
+
+        // 发送AJAX请求获取数据
+        function fetchData(analysisType) {
+            var url = '';
+            if (analysisType === 'tagStatistics') {
+                url = '/steamDB/api/tag_statistics';
+            } else if (analysisType === 'popularityStatistics') {
+                url = '/steamDB/api/popularity_statistics';
+            } else if (analysisType === 'priceStatistics') {
+                url = '/steamDB/api/price_statistics';
+            } else if (analysisType === 'positiveRateStatistics') {
+                url = '/steamDB/api/positive_rate_statistics';
+            } else if (analysisType === 'positiveRatePriceCorrelation') {
+                url = '/steamDB/api/positive_rate_price_correlation';
+            } else if (analysisType === 'reviewsPopularityCorrelation') {
+                url = '/steamDB/api/reviews_popularity_correlation';
+            }
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function (data) {
+                    // 存储原始数据
+                    console.log(data)
+                    originalData = data;
+                    // 初始化图表
+                    updateChart(data, $('#tagCountSelect').val(), $('#chartTypeSelect').val(), analysisType);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching data:', error);
+                }
+            });
+        }
+
+        // 初始化时发送请求
+        fetchData($('#analysisTypeSelect').val());
+
+        // 监听分析类型下拉框变化事件
+        $('#analysisTypeSelect').change(function () {
+            var selectedAnalysisType = $(this).val();
+            if (selectedAnalysisType === 'tagStatistics') {
+                // 如果选择标签统计，则只显示柱状图和词云图选项
+                $('#chartTypeSelect').val('bar').find('option').hide().filter('[value="bar"], [value="wordCloud"]').show();
+            } else if (selectedAnalysisType === 'popularityStatistics' || selectedAnalysisType === 'priceStatistics') {
+                // 如果选择热度统计或价格统计，则图形选择默认变为柱状图，并且只显示柱状图选项
+                $('#chartTypeSelect').val('bar').find('option').hide().filter('[value="bar"]').show();
+            } else if (selectedAnalysisType === 'positiveRateStatistics') {
+                // 如果选择好评率统计，则图形选择默认变为饼图，并且只显示饼图选项
+                $('#chartTypeSelect').val('pie').find('option').hide().filter('[value="pie"]').show();
+            } else if (selectedAnalysisType === 'positiveRatePriceCorrelation' || selectedAnalysisType === 'reviewsPopularityCorrelation') {
+                // 如果选择关联度分析，则图形选择默认变为散点图，并且只显示散点图选项
+                $('#chartTypeSelect').val('scatter').find('option').hide().filter('[value="scatter"]').show();
+            } else {
+                // 如果选择其他分析类型，则恢复图形选择的默认选项
+                $('#chartTypeSelect').find('option').show();
+            }
+            fetchData(selectedAnalysisType);
+        });
+
+        // 监听图形选择和显示数量下拉框变化事件
+        $('#tagCountSelect, #chartTypeSelect').change(function () {
+            var selectedCount = $('#tagCountSelect').val();
+            var selectedChartType = $('#chartTypeSelect').val();
+            var selectedAnalysisType = $('#analysisTypeSelect').val();
+            updateChart(originalData, selectedCount, selectedChartType, selectedAnalysisType);
+        });
+
+        // 更新图表的函数
+        function updateChart(data, count, chartType, analysisType) {
+            // 处理“全部”选项
+            if (count === 'all') {
+                count = data.length;
+            }
+
+            if (analysisType === 'tagStatistics') {
+                if (chartType === 'bar') {
+                    drawBarChart(data, count);
+                } else if (chartType === 'wordCloud') {
+                    drawWordCloud(data, count);
+                }
+            } else if (analysisType === 'popularityStatistics') {
+                drawPopularityChart(data, count);
+            } else if (analysisType === 'priceStatistics') {
+                drawPriceChart(data, count);
+            } else if (analysisType === 'positiveRateStatistics') {
+                drawPositiveRateChart(data, count);
+            } else if (analysisType === 'positiveRatePriceCorrelation') {
+                if (chartType === 'scatter') {
+                    drawPositiveRatePriceScatterChart(data, count);
+                }
+            } else if (analysisType === 'reviewsPopularityCorrelation') {
+                if (chartType === 'scatter') {
+                    drawReviewsPopularityScatterChart(data, count);
+                }
+            }
+        }
+
+        // 绘制柱状图的函数
+        function drawBarChart(data, count) {
+            // 根据选择的数量截取数据
+            var sortedData = data.sort((a, b) => b.value - a.value);
+            var slicedData = sortedData.slice(0, count);
+
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Tag Statistics',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: slicedData.map(item => item.name),
+                    axisLabel: {
+                        rotate: 45,
+                        interval: 0,
+                        show: count <= 50 // 如果选中的值大于50，则不显示x轴标签
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: 'Tag Count',
+                    type: 'bar',
+                    data: slicedData.map(item => item.value),
+                    itemStyle: {
+                        normal: {
+                            color: function (params) {
+                                // 生成随机颜色
+                                return 'rgb(' + [
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255)
+                                ].join(',') + ')';
+                            }
+                        }
+                    }
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制词云图的函数
+        function drawWordCloud(data, count) {
+            // 清空之前的图表配置
+            myChart.clear();
+
+            // 根据选择的数量截取数据
+            var sortedData = data.sort((a, b) => b.value - a.value);
+            var slicedData = sortedData.slice(0, count);
+
+            // 配置ECharts选项
+            var option = {
+                series: [{
+                    type: 'wordCloud',
+                    shape: 'circle',
+                    sizeRange: [12, 60],
+                    rotationRange: [-90, 90],
+                    rotationStep: 45,
+                    gridSize: 8,
+                    drawOutOfBound: false,
+                    textStyle: {
+                        fontFamily: '微软雅黑',
+                        color: function () {
+                            return 'rgb(' + [
+                                Math.round(Math.random() * 250),
+                                Math.round(Math.random() * 250),
+                                Math.round(Math.random() * 250)
+                            ].join(',') + ')';
+                        }
+                    },
+                    data: slicedData
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制热度统计图的函数
+        function drawPopularityChart(data, count) {
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Popularity Statistics',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: Object.keys(data),
+                    axisLabel: {
+                        rotate: 45,
+                        interval: 0
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: 'Game Count',
+                    type: 'bar',
+                    data: Object.values(data),
+                    itemStyle: {
+                        normal: {
+                            color: function (params) {
+                                // 生成随机颜色
+                                return 'rgb(' + [
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255)
+                                ].join(',') + ')';
+                            }
+                        }
+                    }
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制价格统计图的函数
+        // 绘制价格统计图的函数
+        function drawPriceChart(data, count) {
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Price Statistics',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: Object.keys(data),
+                    axisLabel: {
+                        rotate: 45,
+                        interval: 0
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: 'Game Count',
+                    type: 'bar',
+                    data: Object.values(data),
+                    itemStyle: {
+                        normal: {
+                            color: function (params) {
+                                // 生成随机颜色
+                                return 'rgb(' + [
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255)
+                                ].join(',') + ')';
+                            }
+                        }
+                    }
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制好评率统计图的函数
+        // 绘制好评率统计图的函数
+        function drawPositiveRateChart(data, count) {
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Positive Rate Statistics',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} games'
+                },
+                series: [
+                    {
+                        name: 'Positive Rate',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '40%'], // 将饼图位置往上调整
+                        data: Object.entries(data).map(([range, count]) => ({
+                            name: range,
+                            value: count
+                        })),
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制好评率和价格之间的散点图
+        function drawPositiveRatePriceScatterChart(data, count) {
+            // 根据选择的数量截取数据
+            var slicedData = data.slice(0, count);
+
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Positive Rate vs Price',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Price',
+                    axisLabel: {
+                        formatter: '{value} USD'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Positive Rate',
+                    axisLabel: {
+                        formatter: '{value} %'
+                    }
+                },
+                series: [{
+                    name: 'Positive Rate vs Price',
+                    type: 'scatter',
+                    data: slicedData.map(item => [item.cur_price, item.steam_db_rating]),
+                    itemStyle: {
+                        normal: {
+                            color: function (params) {
+                                // 生成随机颜色
+                                return 'rgb(' + [
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255)
+                                ].join(',') + ')';
+                            }
+                        }
+                    }
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+
+        // 绘制评论数量和热度之间的散点图
+        function drawReviewsPopularityScatterChart(data, count) {
+            // 根据选择的数量截取数据
+            var slicedData = data.slice(0, count);
+
+            // 配置ECharts选项
+            var option = {
+                title: {
+                    text: 'Reviews Count vs Popularity',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Reviews Count',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Popularity',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                series: [{
+                    name: 'Reviews Count vs Popularity',
+                    type: 'scatter',
+                    data: slicedData.map(item => [item.total_reviews_count, item.all_time_peak]),
+                    itemStyle: {
+                        normal: {
+                            color: function (params) {
+                                // 生成随机颜色
+                                return 'rgb(' + [
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255),
+                                    Math.round(Math.random() * 255)
+                                ].join(',') + ')';
+                            }
+                        }
+                    }
+                }]
+            };
+
+            // 使用配置项和数据显示图表
+            myChart.setOption(option);
+        }
+    });
+</script>
+</body>
+</html>

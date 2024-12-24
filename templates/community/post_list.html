@@ -1,0 +1,539 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    {% include 'common/head.html' %}
+    <style>
+        .steam-community {
+            background-color: #1b2838;
+            color: #acb2b8;
+            padding-top: 70px;
+        }
+        .steam-community .panel {
+            background-color: #16202d;
+            border: none;
+        }
+        .steam-community .panel-default > .panel-heading {
+            background-color: #16202d;
+            border-bottom: 1px solid #2d3f50;
+            color: #acb2b8;
+        }
+        .steam-community .panel-body {
+            background-color: #16202d;
+            color: #acb2b8;
+        }
+        .steam-community .card {
+            background-color: #1b2838;
+            border: none;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .steam-community .card:hover {
+            transform: translateY(-2px);
+        }
+        .steam-community .card-header {
+            background-color: #16202d;
+            border-bottom: 1px solid #2d3f50;
+            padding: 15px;
+        }
+        .steam-community .card-body {
+            background-color: #16202d;
+            padding: 15px;
+        }
+        .steam-community .card-footer {
+            background-color: #16202d;
+            border-top: 1px solid #2d3f50;
+            padding: 15px;
+        }
+        .steam-community .media-heading {
+            color: #66c0f4;
+            font-size: 14px;
+            margin: 0;
+        }
+        .steam-community .text-muted {
+            color: #626366;
+        }
+        .steam-community .btn-default {
+            background-color: #2d3f50;
+            border-color: #2d3f50;
+            color: #66c0f4;
+        }
+        .steam-community .btn-default:hover {
+            background-color: #3d5166;
+            border-color: #3d5166;
+            color: #66c0f4;
+        }
+        .steam-community .btn-primary {
+            background-color: #67c1f5;
+            border-color: #67c1f5;
+            color: #1b2838;
+            padding: 6px 15px;
+        }
+        .steam-community .btn-primary:hover {
+            background-color: #7ccbf8;
+            border-color: #7ccbf8;
+        }
+        .steam-community .form-control {
+            background-color: #2d3f50;
+            border-color: #2d3f50;
+            color: #acb2b8;
+        }
+        .steam-community .form-control:focus {
+            background-color: #3d5166;
+            border-color: #66c0f4;
+            color: #acb2b8;
+            box-shadow: none;
+        }
+        .steam-community .media-left img {
+            border: 1px solid #2d3f50;
+            border-radius: 2px;
+        }
+        .steam-community .post-stats {
+            color: #626366;
+            font-size: 12px;
+        }
+        .steam-community .post-stats i {
+            color: #67c1f5;
+            margin-right: 3px;
+        }
+        .steam-community .modal-content {
+            background-color: #16202d;
+            border: 1px solid #2d3f50;
+        }
+        .steam-community .modal-header {
+            border-bottom: 1px solid #2d3f50;
+        }
+        .steam-community .modal-footer {
+            border-top: 1px solid #2d3f50;
+        }
+        .steam-community .close {
+            color: #acb2b8;
+            text-shadow: none;
+            opacity: 0.7;
+        }
+        .steam-community .close:hover {
+            color: #ffffff;
+            opacity: 1;
+        }
+        .steam-community .panel-heading {
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        .steam-community .panel-title {
+            color: #fff;
+            font-size: 16px;
+            margin: 0;
+            line-height: 32px;
+        }
+        .steam-community .panel-heading .btn-primary {
+            background-color: #67c1f5;
+            border-color: #67c1f5;
+            color: #1b2838;
+            margin-top: -2px;
+        }
+        .steam-community .panel-heading .btn-primary:hover {
+            background-color: #7ccbf8;
+            border-color: #7ccbf8;
+        }
+        /* 分页按钮样式 */
+        .pagination-container .btn {
+            min-width: 30px;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination-container .btn:hover {
+            background-color: #67c1f5 !important;
+            color: #1b2838 !important;
+        }
+        
+        .pagination-container .btn.active {
+            background-color: #67c1f5 !important;
+            color: #1b2838 !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="steam-community">
+    {% include 'common/navbar.html' %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="panel-title">Steam Community Discussions</h3>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                {% if request.session.user_id %}
+                                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createPostModal">
+                                    <i class="fas fa-plus"></i> Create New Topic
+                                </button>
+                                {% else %}
+                                <a href="/steamDB/login/" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-sign-in-alt"></i> Login to Create Topic
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            {% for post in posts %}
+                            <div class="col-md-6">
+                                <div class="card" style="cursor: pointer;" onclick="window.location='{% url 'post_detail' post.id %}'">
+                                    <div class="card-header">
+                                        <div class="media">
+                                            <div class="media-left">
+                                                <img src="{{ post.game_cover }}" style="width: 184px; height: 69px; object-fit: cover;">
+                                            </div>
+                                            <div class="media-body" style="padding-left: 15px;">
+                                                <h4 class="media-heading">{{ post.title }}</h4>
+                                                <small class="text-muted">
+                                                    {{ post.game_name }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted">{{ post.content|truncatewords:30 }}</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <span class="post-stats">
+                                                    <span style="color: #67c1f5;">💬</span> {{ post.comments.count }}
+                                                    <span style="color: #67c1f5; margin-left: 15px; margin-right: 5px;">👍</span> {{ post.likes.count }}
+                                                    <span style="margin-left: 25px;">{{ post.created_time|date:"Y-m-d H:i" }}</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- 分页 -->
+                        <div class="text-center" style="margin-top: 20px;">
+                            <div class="pagination-container" style="display: inline-block; background: #1a1a1a; padding: 5px; border-radius: 3px;">
+                                {% if has_previous %}
+                                <button class="btn btn-default btn-sm prev-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                {% endif %}
+                                {% for i in page_range %}
+                                <button class="btn btn-default btn-sm page-num{% if i == current_page %} active{% endif %}" 
+                                    data-page="{{ i }}" 
+                                    style="margin: 0 5px; background-color: {% if i == current_page %}#67c1f5{% else %}#2d3f50{% endif %}; 
+                                    color: {% if i == current_page %}#1b2838{% else %}#67c1f5{% endif %}; border: none;">
+                                    {{ i }}
+                                </button>
+                                {% endfor %}
+                                {% if has_next %}
+                                <button class="btn btn-default btn-sm next-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发布帖子模态框 -->
+    <div class="modal fade" id="createPostModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">发布新帖子</h4>
+                </div>
+                <form id="postForm" method="post" action="{% url 'create_post' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>游戏名称</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="game_name" id="game_name" required 
+                                    placeholder="请输入游戏名称" 
+                                    title="请输入要讨论的游戏名称，例如：赛博朋克2077">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-default dropdown-toggle" 
+                                            style="background: #2d3f50; color: #67c1f5; border: none;"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-gamepad"></i> <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-right" 
+                                        style="background: #2d3f50; max-height: 300px; overflow-y: auto;">
+                                        <li class="dropdown-header" style="color: #67c1f5;">常见游戏</li>
+                                        <li role="separator" class="divider" style="border-color: #67c1f5;"></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div id="game_suggestions" class="list-group" style="position: absolute; width: 100%; z-index: 1000; display: none;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>游戏封面链接</label>
+                            <input type="url" class="form-control" name="game_cover" id="game_cover" required
+                                placeholder="请输入游戏封面图片链接"
+                                title="请输入游戏封面的图片链接，建议使用Steam商店中的游戏封面图">
+                            <small class="text-muted">游戏封面会根据选择的游戏自动填充</small>
+                            <div id="cover_preview" style="margin-top: 10px; display: none;">
+                                <img src="" alt="游戏封面预览" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>标题</label>
+                            <input type="text" class="form-control" name="title" required
+                                placeholder="请输入帖子标题"
+                                title="请输入帖子标题，简明扼要地描述你要讨论的内容">
+                        </div>
+                        <div class="form-group">
+                            <label>内容</label>
+                            <textarea class="form-control" name="content" rows="5" required
+                                placeholder="请输入帖子内容..."
+                                title="请详细描述你要讨论的内容，可以包括游戏体验、问题反馈或建议等"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" title="取消发布">取消</button>
+                        <button type="submit" class="btn btn-primary" title="发布新帖子">发布帖子</button>
+                    </div>
+                </form>
+
+                <script>
+                $(document).ready(function() {
+                    // 加载常见游戏列表
+                    $.ajax({
+                        url: '/steamDB/api/search_games/',
+                        type: 'GET',
+                        data: { list_all: true },
+                        success: function(response) {
+                            var dropdownMenu = $('.dropdown-menu');
+                            response.games.forEach(function(game) {
+                                dropdownMenu.append(`
+                                    <li>
+                                        <a href="#" class="common-game" data-id="${game.id}" 
+                                           style="color: #67c1f5; padding: 8px 20px;">
+                                            ${game.name}
+                                        </a>
+                                    </li>
+                                `);
+                            });
+                            
+                            // 绑定点击常见游戏事件
+                            $('.common-game').click(function(e) {
+                                e.preventDefault();
+                                var name = $(this).text().trim();
+                                var id = $(this).data('id');
+                                $('#game_name').val(name);
+                                var coverUrl = `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`;
+                                $('#game_cover').val(coverUrl).trigger('change');
+                            });
+                        }
+                    });
+                    
+                    // 游戏名称输入防抖
+                    var searchTimeout;
+                    $('#game_name').on('input', function() {
+                        clearTimeout(searchTimeout);
+                        var query = $(this).val().trim();
+                        if (query) {
+                            searchTimeout = setTimeout(function() {
+                                // 先搜索游戏列表
+                                $.ajax({
+                                    url: '/steamDB/api/search_games/',
+                                    type: 'GET',
+                                    data: { q: query },
+                                    success: function(response) {
+                                        var suggestions = '';
+                                        if (response.games.length > 0) {
+                                            // 始终预览第一个最匹配的游戏封面
+                                            $('#game_cover').val(response.games[0].header_image).trigger('change');
+                                            
+                                            response.games.forEach(function(game) {
+                                                suggestions += `
+                                                    <a href="#" class="list-group-item" data-name="${game.name}" 
+                                                       data-cover="${game.header_image}"
+                                                       style="background: #2d3f50; color: #67c1f5; border: none; 
+                                                              display: flex; align-items: center;">
+                                                       <img src="${game.header_image}" 
+                                                            style="width: 120px; height: 45px; object-fit: cover; 
+                                                                   margin-right: 10px;">
+                                                       ${game.name}
+                                                   </a>
+                                               `;
+                                            });
+                                            $('#game_suggestions').html(suggestions).show();
+                                        } else {
+                                            $('#game_suggestions').hide();
+                                            $('#game_cover').val('');
+                                            $('#cover_preview').hide();
+                                        }
+                                    }
+                                });
+                            }, 100);  // 减少延迟，使预览更快
+                        } else {
+                            $('#game_cover').val('');
+                            $('#cover_preview').hide();
+                            $('#game_suggestions').hide();
+                        }
+                    });
+
+                    // 点击建议列表项
+                    $(document).on('click', '#game_suggestions .list-group-item', function(e) {
+                        e.preventDefault();
+                        var name = $(this).data('name');
+                        var cover = $(this).data('cover');
+                        $('#game_name').val(name);
+                        $('#game_cover').val(cover).trigger('change');
+                        $('#game_suggestions').hide();
+                    });
+
+                    // 监听游戏封面链接变化
+                    $('#game_cover').on('input change', function() {
+                        var coverUrl = $(this).val().trim();
+                        if (coverUrl) {
+                            $('#cover_preview img').attr('src', coverUrl);
+                            $('#cover_preview').show();
+                        } else {
+                            $('#cover_preview').hide();
+                        }
+                    });
+
+                    // 点击其他地方时隐藏建议列表
+                    $(document).click(function(e) {
+                        if (!$(e.target).closest('#game_name, #game_suggestions').length) {
+                            $('#game_suggestions').hide();
+                        }
+                    });
+
+                    $('#postForm').submit(function(e) {
+                        e.preventDefault();
+                        $.ajax({
+                            url: $(this).attr('action'),
+                            type: 'POST',
+                            data: $(this).serialize(),
+                            error: function(xhr) {
+                                if (xhr.status === 401) {
+                                    window.location.href = '/steamDB/login/';
+                                }
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    // 关闭模态框并刷新页面
+                                    $('#createPostModal').modal('hide');
+                                    // 清空表单
+                                    $('#postForm')[0].reset();
+                                    location.reload();
+                                }
+                            }
+                        });
+                    });
+                });
+
+                function refreshPosts(page) {
+                    $.ajax({
+                        url: '/community/',
+                        type: 'GET',
+                        data: { page: page },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                // 更新帖子列表
+                                var postsHtml = '';
+                                response.posts.forEach(function(post) {
+                                    postsHtml += `
+                                        <div class="col-md-6">
+                                            <div class="card" style="cursor: pointer;" onclick="window.location='/post/${post.id}'">
+                                                <div class="card-header">
+                                                    <div class="media">
+                                                        <div class="media-left">
+                                                            <img src="${post.game_cover}" style="width: 184px; height: 69px; object-fit: cover;">
+                                                        </div>
+                                                        <div class="media-body" style="padding-left: 15px;">
+                                                            <h4 class="media-heading">${post.title}</h4>
+                                                            <small class="text-muted">${post.game_name}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="text-muted">${post.content}</p>
+                                                </div>
+                                                <div class="card-footer">
+                                                    <div class="row">
+                                                        <div class="col-xs-12">
+                                                            <span class="post-stats">
+                                                                <span style="color: #67c1f5;">💬</span> ${post.comments.count}
+                                                                <span style="color: #67c1f5; margin-left: 15px; margin-right: 5px;">👍</span> ${post.likes.count}
+                                                                <span style="margin-left: 25px;">${post.created_time}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                $('.panel-body .row').html(postsHtml);
+                                
+                                // 更新分页
+                                var paginationHtml = '';
+                                if (response.has_previous) {
+                                    paginationHtml += '<button class="btn btn-default btn-sm prev-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;"><i class="fas fa-chevron-left"></i></button>';
+                                }
+                                response.page_range.forEach(function(i) {
+                                    var isActive = i === response.current_page;
+                                    paginationHtml += '<button class="btn btn-default btn-sm page-num' + 
+                                        (isActive ? ' active' : '') + '" data-page="' + i + '" style="margin: 0 5px; background-color: ' + 
+                                        (isActive ? '#67c1f5' : '#2d3f50') + '; color: ' + 
+                                        (isActive ? '#1b2838' : '#67c1f5') + '; border: none;">' + i + '</button>';
+                                });
+                                if (response.has_next) {
+                                    paginationHtml += '<button class="btn btn-default btn-sm next-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;"><i class="fas fa-chevron-right"></i></button>';
+                                }
+                                $('.pagination-container').html(paginationHtml);
+                                
+                                // 重新绑定分页事件
+                                bindPaginationEvents();
+                                
+                                // 更新 URL
+                                history.pushState(null, '', '?page=' + page);
+                            }
+                        }
+                    });
+                }
+                
+                function bindPaginationEvents() {
+                    $('.page-num').click(function(e) {
+                        e.preventDefault();
+                        refreshPosts(parseInt($(this).data('page')));
+                    });
+                    $('.prev-page').click(function(e) {
+                        e.preventDefault();
+                        var currentPage = parseInt($('.page-num.active').data('page'));
+                        refreshPosts(currentPage - 1);
+                    });
+                    $('.next-page').click(function(e) {
+                        e.preventDefault();
+                        var currentPage = parseInt($('.page-num.active').data('page'));
+                        refreshPosts(currentPage + 1);
+                    });
+                }
+                
+                $(document).ready(function() {
+                    // 绑定分页事件
+                    bindPaginationEvents();
+                });
+                </script>
+            </div>
+        </div>
+    </div>
+
+    {% include 'common/foot.html' %}
+</body>
+</html> 

@@ -1,0 +1,33 @@
+<!-- templates/navbar.html -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">SteamDB</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="{% if request.path == '/steamDB/home/' %}active{% endif %}"><a href="/steamDB/home/">Home</a></li>
+            <li class="{% if request.path == '/steamDB/show_display/' %}active{% endif %}"><a href="/steamDB/show_display/">Games</a></li>
+            <li class="{% if request.path == '/steamDB/analysis/' %}active{% endif %}"><a href="/steamDB/analysis/">Analysis</a></li>
+            <li class="{% if request.path == '/steamDB/recommendation/' %}active{% endif %}"><a href="/steamDB/recommendation/">Recommendation</a></li>
+            <li class="{% if request.path == '/steamDB/company/' %}active{% endif %}"><a href="/steamDB/company/">Company</a></li>
+            <li class="{% if request.path == '/community/' %}active{% endif %}"><a href="/community/">Community</a>
+            <li class="{% if request.path == '/steamDB/about/' %}active{% endif %}"><a href="/steamDB/about/">About</a></li>
+            </li>
+        </ul>
+
+        {% if request.path == '/steamDB/show_display/' %}
+        <form class="navbar-form navbar-right" role="search">
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Search..." id="search_input">
+            </div>
+            <button type="submit" class="btn btn-default" id="search_button">Search</button>
+        </form>
+        {% endif %}
+
+        <!-- 用户信息和注销按钮 -->
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="#" id="user_info" data-id="{{ request.session.user_id }}">User Name : {{ request.session.username }}</a></li>
+            <li><a href="/steamDB/api/logout/" id="logout-btn">Logout</a></li>
+        </ul>
+    </div>
+</nav>

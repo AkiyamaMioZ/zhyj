@@ -1,0 +1,51 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About</title>
+    {% include 'common/head.html' %}
+</head>
+
+
+<body>
+{% include 'common/navbar.html' %}
+
+
+<div class="container">
+    <div class="header">
+        <h1>Website Disclaimer</h1>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <p class="text-center">
+                    <strong>Website Disclaimer</strong>
+                </p>
+                <p class="text-center">
+                    本网站所获取的所有数据均为合法获取，且均不用于商业用途中，仅在本课程作业中合理使用。
+                </p>
+                 <p class="text-center">
+                    所有游戏数据均来源于SteamDB官网公开数据，详情请见 <a href="https://steamdb.info/" target="_blank">https://steamdb.info/</a>.
+                </p>
+                <p class="text-center">
+                    本网站的游戏基本数据均为10月1日前所收集的公开数据，股票数据利用python提供的yfinance库进行获取，并对10.16至10.30腾讯股票价格进行预测。
+                </p>
+                <p class="text-center">
+                    本网站的多数功能由于爬取数据为英文字段，因而继承语言，多数使用英文来进行展示。以下为主要字段的中英对照：
+                </p>
+                <p class="text-center">
+                    curent_price：现价，last_price：上一期价格，all_time_pick：任意24h内最多游戏人数，steam_db_rating：SteamDB中的好评率
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
+{% include 'common/foot.html' %}

@@ -1,0 +1,431 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    {% include 'common/head.html' %}
+    <style>
+        .steam-community {
+            background-color: #1b2838;
+            color: #acb2b8;
+        }
+        .steam-community .panel {
+            background-color: #16202d;
+            border: none;
+        }
+        .steam-community .panel-default > .panel-heading {
+            background-color: #16202d;
+            border-bottom: 1px solid #2d3f50;
+            color: #acb2b8;
+        }
+        .steam-community .panel-body {
+            background-color: #16202d;
+            color: #acb2b8;
+        }
+        .steam-community .panel-footer {
+            background-color: #16202d;
+            border-top: 1px solid #2d3f50;
+        }
+        .steam-community .comment {
+            position: relative;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #1b2838;
+            border-radius: 3px;
+        }
+        .steam-community .reply {
+            position: relative;
+            padding: 10px 15px;
+            margin: 10px 0 10px 20px;
+            background-color: #1b2838;
+            border-left: 2px solid #2d3f50;
+        }
+        .steam-community .media-heading {
+            color: #66c0f4;
+            font-size: 14px;
+            margin: 0;
+        }
+        .steam-community .text-muted {
+            color: #626366;
+        }
+        .steam-community .btn-default {
+            background-color: #2d3f50;
+            border-color: #2d3f50;
+            color: #66c0f4;
+        }
+        .steam-community .btn-default:hover {
+            background-color: #3d5166;
+            border-color: #3d5166;
+            color: #66c0f4;
+        }
+        .steam-community .btn-primary {
+            background-color: #66c0f4;
+            border-color: #66c0f4;
+            color: #1b2838;
+        }
+        .steam-community .btn-primary:hover {
+            background-color: #7ccbf8;
+            border-color: #7ccbf8;
+        }
+        .steam-community .btn-link {
+            color: #66c0f4;
+        }
+        .steam-community .btn-link:hover {
+            color: #7ccbf8;
+            text-decoration: none;
+        }
+        .steam-community .form-control {
+            background-color: #2d3f50;
+            border-color: #2d3f50;
+            color: #acb2b8;
+        }
+        .steam-community .form-control:focus {
+            background-color: #3d5166;
+            border-color: #66c0f4;
+            color: #acb2b8;
+            box-shadow: none;
+        }
+        .steam-community .like-btn.active {
+            background-color: #66c0f4;
+            color: #1b2838;
+        }
+        .steam-community .container {
+            margin-top: 20px;
+        }
+        .steam-community .post-content {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 15px 0;
+        }
+        .steam-community .comment-time {
+            font-size: 12px;
+            color: #626366;
+            margin-left: 15px;
+        }
+        .steam-community .comment-actions {
+            margin-top: 8px;
+        }
+        .steam-community .comment-content {
+            margin: 8px 0;
+        }
+        .steam-community .thumb-up {
+            color: #67c1f5;
+            margin-right: 5px;
+        }
+        /* 评论点赞按钮样式 */
+        .comment-like-btn {
+            background-color: #2d3f50;
+            color: #67c1f5;
+            border: none;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        .comment-like-btn i {
+            color: #67c1f5;
+        }
+        .comment-like-btn.active {
+            background-color: #67c1f5;
+            color: #1b2838;
+        }
+        .comment-like-btn.active i {
+            color: #1b2838;
+        }
+        .comment-like-btn:hover {
+            background-color: #67c1f5;
+            color: #1b2838;
+        }
+        .comment-like-btn:hover i {
+            color: #1b2838;
+        }
+        .comment-like-btn:focus {
+            outline: none;
+        }
+        /* 分页按钮样式 */
+        .pagination-container .btn {
+            min-width: 30px;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination-container .btn:hover {
+            background-color: #67c1f5 !important;
+            color: #1b2838 !important;
+        }
+        
+        .pagination-container .btn.active {
+            background-color: #67c1f5 !important;
+            color: #1b2838 !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="steam-community">
+    {% include 'common/navbar.html' %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- 帖子内容 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div style="margin-top: 20px;">
+                            <div class="media">
+                                <div class="media-left">
+                                    <img src="{{ post.game_cover }}" style="width: 184px; height: 69px; object-fit: cover;">
+                                </div>
+                                <div class="media-body" style="padding-left: 15px;">
+                                    <h4 class="media-heading">{{ post.title }}</h4>
+                                    <div class="post-info">
+                                        <small class="text-muted">
+                                            Posted by {{ post.author.username }} • {{ post.created_time|date:"Y-m-d H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="post-content">{{ post.content }}</div>
+                        <div class="comment-actions">
+                            <button class="btn btn-default btn-sm like-btn{% if post.liked %} active{% endif %}" 
+                                style="{% if post.liked %}background-color: #67c1f5; color: #1b2838;{% endif %}">
+                                <i class="fas fa-thumbs-up" style="color: {% if post.liked %}#1b2838{% else %}#67c1f5{% endif %};"></i>
+                                <span class="like-count">{{ post.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 评论区 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="fas fa-comments" style="color: #67c1f5;"></i>
+                            Comments ({{ comments|length }})
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <!-- 评论输入框 -->
+                        <div class="comment">
+                            {% if request.session.user_id %}
+                            <form id="commentForm" method="post" action="{% url 'add_comment' post.id %}">
+                                {% csrf_token %}
+                                <textarea class="form-control" name="content" rows="3" placeholder="Add a comment..." required></textarea>
+                                <div style="margin-top: 10px; text-align: right;">
+                                    <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                                </div>
+                            </form>
+                            {% else %}
+                            <div class="text-center" style="padding: 20px;">
+                                <p class="text-muted">Please <a href="/steamDB/login/" style="color: #67c1f5;">login</a> to post a comment.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 评论列表 -->
+                        {% for comment in comments %}
+                        <div class="comment">
+                            <div class="comment-header">
+                                <span class="media-heading">{{ comment.author.username }}</span>
+                                <span class="comment-time">{{ comment.created_time|date:"Y-m-d H:i" }}</span>
+                            </div>
+                            <div class="comment-content">{{ comment.content }}</div>
+                            <div class="comment-actions">
+                                <button class="btn btn-link btn-sm comment-like-btn{% if comment.liked %} active{% endif %}" 
+                                    data-id="{{ comment.id }}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span class="comment-like-count">{{ comment.likes.count|default:0 }}</span>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- 评论分页 -->
+                        <div class="text-center" style="margin-top: 20px;">
+                            <div class="pagination-container" style="display: inline-block; background: #1a1a1a; padding: 5px; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧游戏信息 -->
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ post.game_name }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <img src="{{ post.game_cover }}" class="img-responsive" style="width: 100%; margin-bottom: 15px;">
+                        <div style="margin-top: 15px;">
+                            <a href="/community/" class="btn btn-default btn-block">
+                                <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> Back to All Discussions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'common/foot.html' %}
+
+    <script>
+    $(document).ready(function() {
+        // 初始化评论列表和分页
+        refreshComments({{ current_page }});
+        
+        // 点赞功能
+        $('.like-btn').click(function() {
+            var btn = $(this);
+            $.post('/post/{{ post.id }}/like/', {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            }, function(data) {
+                $('.like-count').text(data.count);
+                if (data.liked) {
+                    btn.addClass('active').css('background-color', '#67c1f5').css('color', '#1b2838');
+                    btn.find('i').css('color', '#1b2838');
+                } else {
+                    btn.removeClass('active').css('background-color', '#2d3f50').css('color', '#67c1f5');
+                    btn.find('i').css('color', '#67c1f5');
+                }
+            });
+        });
+
+        // 渲染单个评论的函数
+        function renderComment(comment) {
+            return $('<div class="comment">' +
+                '<div class="comment-header">' +
+                    '<span class="media-heading">' + comment.author.username + '</span>' +
+                    '<span class="comment-time">' + comment.created_time + '</span>' +
+                '</div>' +
+                '<div class="comment-content">' + comment.content + '</div>' +
+                '<div class="comment-actions">' +
+                    '<button class="btn btn-sm comment-like-btn' + (comment.liked ? ' active' : '') + '" data-id="' + comment.id + '">' +
+                        '<i class="fas fa-thumbs-up"></i>' +
+                        '<span class="comment-like-count">' + comment.likes.count + '</span>' +
+                    '</button>' +
+                '</div>' +
+            '</div>');
+        }
+
+        // 刷新评论列表
+        function refreshComments(page) {
+            page = page || 1;  // 如果没有指定页码，默认第一页
+            $.get('/post/{{ post.id }}/comments/', {
+                page: page
+            }, function(response) {
+                if (response.status === 'success') {
+                    console.log('Response:', response);  // 添加调试输出
+                    // 找到评论列表容器
+                    var commentList = $('.panel-body');
+                    // 保存评论输入框和分页
+                    var commentForm = $('.comment:first');
+                    var pagination = $('.pagination-container').parent();
+                    
+                    // 清空除了评论输入框外的所有评论
+                    commentList.find('.comment:not(:first)').remove();
+                    
+                    // 添加所有评论
+                    response.comments.forEach(function(comment) {
+                        renderComment(comment).insertBefore(pagination);
+                    });
+                    
+                    // 更新评论数量
+                    $('.panel-title').html(
+                        '<i class="fas fa-comments" style="color: #67c1f5;"></i> ' +
+                        'Comments (' + response.total_comments + ')'
+                    );
+                    
+                    // 更新分页
+                    var paginationHtml = '';
+                    if (response.has_previous) {
+                        paginationHtml += '<button class="btn btn-default btn-sm prev-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;"><i class="fas fa-chevron-left"></i></button>';
+                    }
+                    response.page_range.forEach(function(i) {
+                        console.log('Current page:', response.current_page, 'Page number:', i, 'Is active:', i === response.current_page);
+                        var isActive = parseInt(i) === parseInt(response.current_page);
+                        var buttonStyle = 'margin: 0 5px; background-color: ' + (isActive ? '#67c1f5' : '#2d3f50') + 
+                            '; color: ' + (isActive ? '#1b2838' : '#67c1f5') + '; border: none;';
+                        paginationHtml += '<button class="btn btn-default btn-sm page-num' + 
+                            (isActive ? ' active' : '') + '" data-page="' + i + '" style="' + buttonStyle + '">' + 
+                            i + '</button>';
+                    });
+                    if (response.has_next) {
+                        paginationHtml += '<button class="btn btn-default btn-sm next-page" style="margin: 0 5px; background-color: #2d3f50; border: none; color: #67c1f5;"><i class="fas fa-chevron-right"></i></button>';
+                    }
+                    $('.pagination-container').html(paginationHtml);
+                    
+                    // 重新绑定点赞事件
+                    bindLikeEvents();
+                    
+                    // 绑定分页事件
+                    bindPaginationEvents();
+                }
+            });
+        }
+        
+        // 绑定分页事件
+        function bindPaginationEvents() {
+            $('.page-num').click(function(e) {
+                e.preventDefault();
+                refreshComments(parseInt($(this).data('page')));
+            });
+            $('.prev-page').click(function(e) {
+                e.preventDefault();
+                var currentPage = parseInt($('.page-num.active').data('page'));
+                refreshComments(currentPage - 1);
+            });
+            $('.next-page').click(function(e) {
+                e.preventDefault();
+                var currentPage = parseInt($('.page-num.active').data('page'));
+                refreshComments(currentPage + 1);
+            });
+        }
+
+        // 绑定点赞事件
+        function bindLikeEvents() {
+            $('.comment-like-btn').click(function() {
+                var btn = $(this);
+                var commentId = btn.data('id');
+                $.post('/comment/' + commentId + '/like/', {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                }, function(data) {
+                    btn.find('.comment-like-count').text(data.count);
+                    if (data.liked) {
+                        btn.addClass('active');
+                    } else {
+                        btn.removeClass('active');
+                    }
+                });
+            });
+        }
+
+        // 评论提交
+        $('#commentForm').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // 清空评论框
+                        $('#commentForm textarea').val('');
+                        // 刷新评论列表，显示第一页
+                        refreshComments(1);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) {
+                        window.location.href = '/steamDB/login/';
+                    }
+                }
+            });
+        });
+
+        // 初始绑定点赞事件
+        bindLikeEvents();
+    });
+    </script>
+</body>
+</html> 

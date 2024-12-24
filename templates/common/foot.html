@@ -1,0 +1,30 @@
+
+<script type="text/javascript">
+
+
+   $(document).ready(function ()  {
+        $('#logout-btn').on('click', function (event) {
+            event.preventDefault();  // 阻止默认的链接行为
+
+            // 显示确认对话框
+            if (confirm('您确定要注销吗？')) {
+                $.ajax({
+                    url: '/steamDB/api/logout/',  // 注销 API 的 URL
+                    method: 'POST',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            // 重定向到登录页面或其他页面
+                            window.location.href = '/steamDB/login/';
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('注销请求失败，请稍后再试。');
+                    }
+                });
+            }
+        });
+   })
+
+</script>
